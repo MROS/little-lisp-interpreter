@@ -1,0 +1,16 @@
+{
+  "name": "little-lisp-interpreter",
+  "version": "0.1.0",
+  "author": "MROS",
+  "description": "簡單的 lisp 直譯器",
+  "dependencies": {
+    "@types/node": "^7.0.18",
+    "mocha": "^3.3.0",
+    "typescript": "^2.3.2"
+  },
+  "scripts": {
+    "test": "tsc; mocha",
+    "build": "tsc",
+    "start": "tsc; node build/interpreter.js"
+  }
+}

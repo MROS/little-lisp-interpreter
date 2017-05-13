@@ -1,0 +1,10 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"target": "es6",
+		"outFile": "build/interpreter.js"
+	},
+	"files": [
+		"interpreter.ts"
+	]
+}
