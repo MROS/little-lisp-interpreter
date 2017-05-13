@@ -6,7 +6,8 @@
 # 使用
 
 ``` bash
-yarn start # 運行
+yarn # 安裝依賴
 yarn run test # 測試
 yarn run build # 將 TypeScript 編譯至 build/ 目錄下
+yarn run lispi <filename> # 開始直譯
 ```

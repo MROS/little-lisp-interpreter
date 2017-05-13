@@ -1,5 +1,3 @@
-const program = "(+ (- 1 2) (- 3 (+ 4 5)))";
-
 enum ExpType {
 	Operator,
 	Number
@@ -95,13 +93,10 @@ function evaluate(node: ExpNode) {
 	}
 }
 
-function interpreter(program: string) {
+export function interpreter(program: string) {
 	let root = parse(program);
 	return evaluate(root);
 }
 
-interpreter(program);
-
-module.exports = {
-	interpreter
-}
+// const program = "(+ (- 1 2) (- 3 (+ 4 5)))";
+// interpreter(program);

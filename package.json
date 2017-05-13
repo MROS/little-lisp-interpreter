@@ -5,12 +5,14 @@
   "description": "簡單的 lisp 直譯器",
   "dependencies": {
     "@types/node": "^7.0.18",
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^3.1.6",
     "mocha": "^3.3.0",
     "typescript": "^2.3.2"
   },
   "scripts": {
-    "test": "tsc; mocha",
-    "build": "tsc",
-    "start": "tsc; node build/interpreter.js"
+    "test": "gulp; mocha",
+    "build": "gulp",
+    "lispi": "gulp; node build/lispi.js"
   }
 }
