@@ -1,6 +1,10 @@
 enum ExpType {
+	LET,
 	Operator,
-	Number
+	Variable,
+	Number,
+	Binding,
+	Let,
 }
 
 class Exp {
@@ -15,23 +19,27 @@ class Exp {
 class ExpNode {
 	children: ExpNode[];
 	exp: Exp;
-	constructor(children: ExpNode[], exp: Exp) {
-		this.children = children;
+	constructor(exp: Exp, children: ExpNode[]) {
 		this.exp = exp;
+		this.children = children;
 	}
 }
 
-function parse(program: string): ExpNode {
+// 試以正則表達式做更佳的分割
+function split_expression(program: string): string[] {
+	program = program.trim();
 	let buf = "";
 	let brace_count = 0;
 	let exps = [];
 	for (let c of program) {
 		switch (c) {
+			case "[":
 			case "(": {
 				if (brace_count > 0 ) { buf += c; }
 				brace_count += 1;
 				break;
 			}
+			case "]":
 			case ")": {
 				brace_count -= 1;
 				if (brace_count > 0 ) { buf += c; }
@@ -52,16 +60,33 @@ function parse(program: string): ExpNode {
 		}
 	}
 	exps.push(buf);
-	let node: ExpNode;
-	if (exps.length == 1) {
-		node = new ExpNode([], new Exp(ExpType.Number, Number(exps[0])));
-	} else {
-		node = new ExpNode([], new Exp(ExpType.Operator, exps[0]));
-		for (let i = 1; i < exps.length; i++) {
-			node.children.push(parse(exps[i]));
-		}
+	return exps;
+}
+
+function parser(program: string): ExpNode {
+	const exps = split_expression(program);
+	// console.log(`program: ${program}, exps: ${exps}`);
+	switch (true) {
+		// let
+		case /^let$/.test(exps[0]):
+			return new ExpNode(new Exp(ExpType.LET, "let"), [parser(exps[1]), parser(exps[2])]);
+		// 數字
+		case /^-?[0-9]+$/.test(exps[0]):
+			return new ExpNode(new Exp(ExpType.Number, Number(exps[0])), []);
+		// 加減乘除
+		case /^(\+|-|\*|\/)$/.test(exps[0]):
+			return new ExpNode(
+				new Exp(ExpType.Operator, exps[0]),
+				exps.slice(1).map((str) => parser(str)));
+		// 變數綁定
+		case /^\[[a-z-]+ (.+)\]$/.test(exps[0]):
+			let variable = /^\[([a-z-]+) (.+)\]$/.exec(exps[0])[1];
+			let target = /^\[([a-z-]+) (.+)\]$/.exec(exps[0])[2];
+			return new ExpNode(new Exp(ExpType.Binding, "binding"), [parser(variable), parser(target)]);
+		// 變數
+		case /^[a-z-]+/.test(exps[0]):
+			return new ExpNode(new Exp(ExpType.Variable, exps[0]), []);
 	}
-	return node;
 }
 
 function show(node, level) {
@@ -77,7 +102,6 @@ function evaluate(node: ExpNode) {
 	} else if (node.exp.type == ExpType.Operator) {
 		switch (node.exp.value) {
 			case "+": {
-				// return node.children.reduce((acc, val) => evaluate(acc) + evaluate(val), new ExpNode([], new Exp(ExpType.Number, 0)));
 				return evaluate(node.children[0]) + evaluate(node.children[1]);
 			}
 			case "-": {
@@ -94,9 +118,10 @@ function evaluate(node: ExpNode) {
 }
 
 export function interpreter(program: string) {
-	let root = parse(program);
+	let root = parser(program);
+	// show(root, 0);
 	return evaluate(root);
 }
 
-// const program = "(+ (- 1 2) (- 3 (+ 4 5)))";
-// interpreter(program);
+// interpreter("(let ([a 3]) (+ a 2))");
+// interpreter("(let ([a 3]) (let ([a yuja]) (+ a 2)))");
