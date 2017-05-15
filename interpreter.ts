@@ -96,22 +96,43 @@ function show(node, level) {
 	}
 }
 
-function evaluate(node: ExpNode) {
-	if (node.exp.type == ExpType.Number) {
-		return node.exp.value;
-	} else if (node.exp.type == ExpType.Operator) {
-		switch (node.exp.value) {
-			case "+": {
-				return evaluate(node.children[0]) + evaluate(node.children[1]);
+// TODO: 需要處理同變數重複綁定
+function eval_with_env(node: ExpNode, env: Map<string, ExpNode>) {
+	switch (node.exp.type) {
+		case ExpType.Number: {
+			return node.exp.value;
+		}
+		case ExpType.Variable: {
+			// 若node.exp.type 為 ExpType.Variable ，則 node.exp.value 在建構時必為字串，然而 TypeScript 的型態系統無法推導
+			// 故強制轉型
+			let variable = String(node.exp.value);
+			if (env.has(variable)) {
+				return eval_with_env(env.get(variable), env);
 			}
-			case "-": {
-				return evaluate(node.children[0]) - evaluate(node.children[1]);
-			}
-			case "*": {
-				return evaluate(node.children[0]) * evaluate(node.children[1]);
-			}
-			case "/": {
-				return evaluate(node.children[0]) / evaluate(node.children[1]);
+			throw new Error("變數 ${variable} 未綁定到任何值");
+		}
+		case ExpType.LET: {
+			let binding = node.children[0], exp = node.children[1];
+			let variable = String(binding.children[0].exp.value);
+			env.set(variable, binding.children[1]);
+			let ret = eval_with_env(exp, env);
+			env.delete(variable);
+			return ret;
+		}
+		case ExpType.Operator: {
+			switch (node.exp.value) {
+				case "+": {
+					return eval_with_env(node.children[0], env) + eval_with_env(node.children[1], env);
+				}
+				case "-": {
+					return eval_with_env(node.children[0], env) - eval_with_env(node.children[1], env);
+				}
+				case "*": {
+					return eval_with_env(node.children[0], env) * eval_with_env(node.children[1], env);
+				}
+				case "/": {
+					return eval_with_env(node.children[0], env) / eval_with_env(node.children[1], env);
+				}
 			}
 		}
 	}
@@ -120,8 +141,10 @@ function evaluate(node: ExpNode) {
 export function interpreter(program: string) {
 	let root = parser(program);
 	// show(root, 0);
-	return evaluate(root);
+	let value = eval_with_env(root, new Map<string, ExpNode>());
+	// console.log(`${program} 的求值結果為 ${value}`);
+	return value
 }
 
-// interpreter("(let ([a 3]) (+ a 2))");
-// interpreter("(let ([a 3]) (let ([a yuja]) (+ a 2)))");
+interpreter("(let ([a (let ([b 1]) b)]) (+ 1 a))");
+// interpreter("(let ([a 3]) (let ([yuja a]) (- yuja (+ a 2))))");
