@@ -45,11 +45,13 @@ function split_expression(program: string): string[] {
 				if (brace_count > 0 ) { buf += c; }
 				break;
 			}
+			case "\t":
+			case "\n":
 			case " ": {
-				if (brace_count == 1) {
+				if (brace_count == 1 && buf != "") {
 					exps.push(buf);
 					buf = "";
-				} else {
+				} else if (brace_count > 1) {
 					buf += c;
 				}
 				break;

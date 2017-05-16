@@ -13,6 +13,16 @@ describe("interpreter", function () {
 			assert.equal(interpreter("(* 1 (/ 4 (- 0 -2)))"), 2);
 		});
 	});
+	describe("可接受換行、 tab", function () {
+		const program =`
+(+ 1
+	(+ 4
+		(- 0 -2))))
+`
+		it(`${program} = 7`, function () {
+			assert.equal(interpreter(`${program}`), 7);
+		});
+	});
 	describe("let 綁定生效", function () {
 		it("(let ([a 3]) (+ a -2)) = 1", function () {
 			assert.equal(interpreter("(let ([a 3]) (+ a -2))"), 1);
