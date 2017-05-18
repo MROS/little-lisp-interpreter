@@ -43,6 +43,17 @@ interface EXP {
 	eval: (env: ENV) => any;
 }
 
+class Closure {
+	env: ENV;
+	variable: string;
+	exp: EXP;
+	constructor(env: ENV, variable: string, exp: EXP) {
+		this.env = new Map<string, any>(env);
+		this.variable = variable;
+		this.exp = exp;
+	}
+}
+
 class LET {
 	variable: string;
 	target: EXP;
@@ -67,6 +78,24 @@ class LET {
 	}
 }
 
+class Call {
+	func: EXP;
+	arg: EXP;
+	constructor(program: string) {
+		const exps = split_expression(program);
+		this.func = parser(exps[0]);
+		this.arg = parser(exps[1]);
+	}
+	eval(env: ENV) {
+		let f = this.func.eval(env);
+		let closure_env = f.env;
+		closure_env.set(f.variable, this.arg.eval(env));
+		let ret = f.exp.eval(closure_env);
+		closure_env.delete(f.variable);
+		return ret;
+	}
+}
+
 class LAMBDA {
 	variable: string;
 	exp: EXP;
@@ -80,7 +109,7 @@ class LAMBDA {
 		this.exp = parser(exps[2]);
 	}
 	eval(env: ENV) {
-		
+		return new Closure(env, this.variable, this.exp);
 	}
 }
 
@@ -150,6 +179,10 @@ function parser(program: string): EXP {
 			// 加減乘除
 			case /^(\+|-|\*|\/)$/.test(exps[0]):
 				return new Operation(program);
+			case /^\(lambda .+\)/.test(exps[0]):
+			case /^[a-z_]+/.test(exps[0]):
+				return new Call(program);
+				
 		}
 	} else { // 外面沒有括號的表達式，只該是變數或數字
 		switch (true) {
@@ -168,10 +201,21 @@ export function interpreter(program: string) {
 	let env = new Map<string, EXP>();
 	// console.log(root);
 	let value = root.eval(env);
-	// console.log(`${program} 的求值結果為 ${value}`);
+	console.log(`${program} 的求值結果為 ${value}`);
 	return value
 }
 
+interpreter("((lambda (a) (+ a 1)) 3)")
+interpreter(`
+(let ([f (lambda (a) (+ a 1))])
+	(f 3))
+`)
+interpreter(`
+(let ([x 2])
+  (let ([f (lambda (y) (* x y))])
+    (let ([x 4])
+      (f 3))))
+`)
 // interpreter("(let ([a (let ([b 1]) b)]) (+ 1 a))");
 // interpreter("(let ([a 3]) a)");
 // interpreter("(let ([a 3]) (let ([yuja a]) (- 	yuja (+ a 2))))");
