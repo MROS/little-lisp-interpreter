@@ -4,6 +4,7 @@
   "author": "MROS",
   "description": "簡單的 lisp 直譯器",
   "dependencies": {
+    "@types/immutable": "^3.8.7",
     "@types/node": "^7.0.18",
     "gulp": "^3.9.1",
     "gulp-typescript": "^3.1.6",

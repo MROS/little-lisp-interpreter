@@ -1,3 +1,5 @@
+const { Map } = require("immutable");
+
 function split_expression(program: string): string[] {
 	program = program.trim();
 	let buf = "";
@@ -48,7 +50,7 @@ class Closure {
 	variable: string;
 	exp: EXP;
 	constructor(env: ENV, variable: string, exp: EXP) {
-		this.env = new Map<string, any>(env);
+		this.env = Map(env);
 		this.variable = variable;
 		this.exp = exp;
 	}
@@ -71,9 +73,8 @@ class LET {
 		this.exp = parser(exps[2]);
 	}
 	eval(env: ENV) {
-		env.set(this.variable, this.target.eval(env));
-		let ret = this.exp.eval(env);
-		env.delete(this.variable);
+		const next_env = env.set(this.variable, this.target.eval(env));
+		let ret = this.exp.eval(next_env);
 		return ret;
 	}
 }
@@ -88,10 +89,8 @@ class Call {
 	}
 	eval(env: ENV) {
 		let f = this.func.eval(env);
-		let closure_env = f.env;
-		closure_env.set(f.variable, this.arg.eval(env));
+		let closure_env = f.env.set(f.variable, this.arg.eval(env));
 		let ret = f.exp.eval(closure_env);
-		closure_env.delete(f.variable);
 		return ret;
 	}
 }
@@ -198,7 +197,7 @@ function parser(program: string): EXP {
 
 export function interpreter(program: string) {
 	let root = parser(program);
-	let env = new Map<string, EXP>();
+	let env: ENV = Map();
 	// console.log(root);
 	let value = root.eval(env);
 	console.log(`${program} 的求值結果為 ${value}`);
