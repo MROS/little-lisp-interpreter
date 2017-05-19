@@ -36,4 +36,30 @@ describe("interpreter", function () {
 			assert.equal(interpreter(program), 2);
 		});
 	});
+	describe("lambda 可用", function () {
+		it("((lambda (a) (+ a 1)) 3) = 4", function () {
+			assert.equal(interpreter("((lambda (a) (+ a 1)) 3)"), 4);
+			
+		})
+	});
+	describe("lambda 可被綁定為變數", function () {
+		const program = `
+(let ([f (lambda (a) (+ a 1))])
+	(f 3))
+`
+		it(`${program} = 4`, function () {
+			assert.equal(interpreter(`${program}`), 4);
+		})
+	});
+	describe("詞法作用域", function () {
+		const program = `
+(let ([x 2])
+  (let ([f (lambda (y) (* x y))])
+    (let ([x 4])
+      (f 3))))
+`
+		it(`${program} = 6`, function () {
+			assert.equal(interpreter(`${program}`), 6);
+		})
+	});
 })

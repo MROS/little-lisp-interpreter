@@ -200,21 +200,6 @@ export function interpreter(program: string) {
 	let env: ENV = Map();
 	// console.log(root);
 	let value = root.eval(env);
-	console.log(`${program} 的求值結果為 ${value}`);
+	// console.log(`${program} 的求值結果為 ${value}`);
 	return value
 }
-
-interpreter("((lambda (a) (+ a 1)) 3)")
-interpreter(`
-(let ([f (lambda (a) (+ a 1))])
-	(f 3))
-`)
-interpreter(`
-(let ([x 2])
-  (let ([f (lambda (y) (* x y))])
-    (let ([x 4])
-      (f 3))))
-`)
-// interpreter("(let ([a (let ([b 1]) b)]) (+ 1 a))");
-// interpreter("(let ([a 3]) a)");
-// interpreter("(let ([a 3]) (let ([yuja a]) (- 	yuja (+ a 2))))");
