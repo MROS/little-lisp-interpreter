@@ -62,4 +62,30 @@ describe("interpreter", function () {
 			assert.equal(interpreter(`${program}`), 6);
 		})
 	});
+
+	describe("if 生效", function () {
+		it(`(if #t 1 2) = 1`, function () {
+			assert.equal(interpreter("(if #t 1 2)"), 1);
+		})
+		it(`(if #f 1 2) = 2`, function () {
+			assert.equal(interpreter("(if #f 1 2)"), 2);
+		})
+		it(`((lambda (x) (if (= x 1) 1 2)) 3) = 2`, function () {
+			assert.equal(interpreter("((lambda (x) (if (= x 1) 1 2)) 3)"), 2);
+		})
+	});
+
+	describe("lambda 實現遞迴", function () {
+const fact = `
+(((lambda (x) (x x))
+ (lambda (fact)
+   (lambda (n)
+     (if (= n 0)
+         1
+         (* n ((fact fact) (- n 1))))))) 5)
+`;
+		it(`${fact} = 120`, function () {
+			assert.equal(interpreter(`${fact}`), 120);
+		})
+	})
 })

@@ -112,6 +112,29 @@ class LAMBDA {
 	}
 }
 
+class Condition {
+	cond: EXP;
+	arg1: EXP;
+	arg2: EXP;
+	constructor(program: string) {
+		const exps = split_expression(program);
+		if (exps.length != 4) {
+			throw new Error(`${program}: 判斷式預期有 3 個參數`);
+		} else {
+			this.cond = parser(exps[1]);
+			this.arg1 = parser(exps[2]);
+			this.arg2 = parser(exps[3]);
+		}
+	}
+	eval(env: ENV) {
+		if (this.cond.eval(env)) {
+			return this.arg1.eval(env);
+		} else {
+			return this.arg2.eval(env);
+		}
+	}
+}
+
 class Operation {
 	operator: string;
 	arg1: EXP;
@@ -124,6 +147,9 @@ class Operation {
 	}
 	eval(env: ENV) {
 		switch (this.operator) {
+			case "=": {
+				return this.arg1.eval(env) == this.arg2.eval(env);
+			}
 			case "+": {
 				return this.arg1.eval(env) + this.arg2.eval(env);
 			}
@@ -156,12 +182,23 @@ class Variable {
 }
 
 class LispNumber {
-	n: number;
+	value: number;
 	constructor(program: string) {
-		this.n = Number(program);
+		this.value = Number(program);
 	}
 	eval(env: ENV) {
-		return this.n;
+		return this.value;
+	}
+}
+
+class Bool {
+	value: Boolean;
+	constructor(program: string) {
+		if (program == "#t") { this.value = true; }
+		else if (program == "#f") { this.value = false; }
+	}
+	eval(env: ENV) {
+		return this.value;
 	}
 }
 
@@ -176,12 +213,14 @@ function parser(program: string): EXP {
 			case /^let$/.test(exps[0]):
 				return new LET(program);
 			// 加減乘除
-			case /^(\+|-|\*|\/)$/.test(exps[0]):
+			case /^(=|\+|-|\*|\/)$/.test(exps[0]):
 				return new Operation(program);
+			case /^if$/.test(exps[0]):
+				return new Condition(program);
 			case /^\(lambda .+\)/.test(exps[0]):
 			case /^[a-z_]+/.test(exps[0]):
+			default:
 				return new Call(program);
-				
 		}
 	} else { // 外面沒有括號的表達式，只該是變數或數字
 		switch (true) {
@@ -191,6 +230,9 @@ function parser(program: string): EXP {
 			// 數字
 			case /^-?[0-9]+$/.test(program):
 				return new LispNumber(program);
+			// 真假值
+			case /^(#f|#t)$/.test(program):
+				return new Bool(program);
 		}
 	}
 }
@@ -200,6 +242,29 @@ export function interpreter(program: string) {
 	let env: ENV = Map();
 	// console.log(root);
 	let value = root.eval(env);
-	// console.log(`${program} 的求值結果為 ${value}`);
+	console.log(`${program} 的求值結果為 ${value}`);
 	return value
 }
+
+interpreter(`(if #t 1 2)`);
+interpreter(`(if #f 1 2)`);
+interpreter(`(if (= 1 1) 1 2)`);
+interpreter(`(let ([a 1]) (if (= a 1) 1 2))`);
+
+const p1 = `
+((lambda (x) (if (= x 1) 1 2)) 3)
+`;
+interpreter(p1);
+
+const fact = `
+(((lambda (x) (x x))
+ (lambda (fact)
+   (lambda (n)
+     (if (= n 0)
+         1
+         (* n ((fact fact) (- n 1))))))) 5)
+`;
+
+console.log(fact);
+
+interpreter(fact);
