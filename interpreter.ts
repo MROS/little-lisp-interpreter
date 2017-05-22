@@ -237,34 +237,41 @@ function parser(program: string): EXP {
 	}
 }
 
-export function interpreter(program: string) {
-	let root = parser(program);
+export function evaluater(expression: string) {
+	let root = parser(expression);
 	let env: ENV = Map();
 	// console.log(root);
 	let value = root.eval(env);
-	console.log(`${program} 的求值結果為 ${value}`);
+	// console.log(`${expression} 的求值結果為 ${value}`);
 	return value
 }
 
-interpreter(`(if #t 1 2)`);
-interpreter(`(if #f 1 2)`);
-interpreter(`(if (= 1 1) 1 2)`);
-interpreter(`(let ([a 1]) (if (= a 1) 1 2))`);
+export function interpreter(program: string) {
+	function split_program(program) {
+		let expressions = [];
+		let buf = "";
+		let count = 0;
+		for (let c of program) {
+			if (c == "(") {
+				buf += c;
+				count++;
+			} else if (c == ")" && count == 1) {
+				count--;
+				buf += c;
+				expressions.push(buf);
+				buf = "";
+			} else if (c == ")") {
+				buf += c;
+				count--;
+			} else {
+				buf += c;
+			}
+		}
+		return expressions;
+	}
+	let expressions = split_program(program);
+	return expressions.map((expression) => evaluater(expression));
+}
 
-const p1 = `
-((lambda (x) (if (= x 1) 1 2)) 3)
-`;
-interpreter(p1);
-
-const fact = `
-(((lambda (x) (x x))
- (lambda (fact)
-   (lambda (n)
-     (if (= n 0)
-         1
-         (* n ((fact fact) (- n 1))))))) 5)
-`;
-
-console.log(fact);
-
-interpreter(fact);
+// console.log(interpreter(`(if #t 1 2) (if #f 1 2)`));
+// console.log(interpreter(`((lambda (x) (if (= x 1) 1 2)) 0) (if #t 1 2) (if #f 1 2)`));
